@@ -1,5 +1,5 @@
 # Render Docker deployment for NASA TEMPO API
-FROM python:3.12.10-slim
+FROM python:3.11.9-slim
 
 WORKDIR /app
 

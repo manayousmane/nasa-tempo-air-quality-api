@@ -1,10 +1,9 @@
 # NASA TEMPO Air Quality API - Production Dependencies
-# Optimized for Render deployment with pre-compiled wheels
+# Complete dependencies for full functionality
 
-# Build tools
+# Build tools (ensure proper installation)
 setuptools>=68.0.0
 wheel>=0.40.0
-pip>=23.0.0
 
 # Core FastAPI Framework
 fastapi==0.104.1
@@ -12,18 +11,22 @@ uvicorn[standard]==0.24.0
 pydantic==2.5.0
 pydantic-settings==2.1.0
 
-# HTTP Clients
+# HTTP Clients (used in collectors and services)
 aiohttp==3.9.1
 httpx==0.25.2
 
-# Data Processing (using older, stable versions)
-numpy==1.23.5
-pandas==2.0.3
-scikit-learn==1.2.2
-joblib==1.2.0
+# Data Processing & ML (used throughout the application)
+numpy==1.24.3
+pandas==2.1.4
+scikit-learn==1.3.2
+joblib==1.3.2
 
-# Database
+# Database (used in models)
 sqlalchemy==2.0.23
 
 # Utilities
 python-dotenv==1.0.0
+python-multipart==0.0.6
+
+# Additional dependencies for full functionality
+requests==2.31.0

@@ -1,9 +1,6 @@
 #!/bin/bash
-# Render deployment script for NASA TEMPO API
-echo "🚀 Starting NASA TEMPO Air Quality API on Render..."
+# Render deployment script for NASA TEMPO API (Simplified version)
+echo "🚀 Starting NASA TEMPO Air Quality API on Render (Simplified)..."
 
-# Upgrade pip and setuptools
-python -m pip install --upgrade pip setuptools wheel
-
-# Start the application with explicit Python path
-exec python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 1
+# Use simplified main file to avoid dependency issues
+exec python -m uvicorn simple_main:app --host 0.0.0.0 --port $PORT --workers 1

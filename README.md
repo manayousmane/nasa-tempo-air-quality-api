@@ -2,6 +2,8 @@
 
 Une API FastAPI avancée pour les prédictions de qualité de l'air utilisant les données du satellite NASA TEMPO et des modèles de machine learning.
 
+*Projet développé pour le NASA Space Apps Challenge : From Data to Action*
+
 ## 🌟 Fonctionnalités principales
 
 ### 🔍 **Endpoint Location Data**
@@ -237,3 +239,7 @@ MIT License - see LICENSE file for details.
 ## Contact
 
 For questions about this project, please contact the NASA TEMPO team.
+
+---
+
+⭐ **N'hésitez pas à star ce projet si vous le trouvez utile !**

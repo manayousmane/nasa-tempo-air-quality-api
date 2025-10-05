@@ -1,5 +1,5 @@
-# Alternative: Dockerfile for Render if native Python fails
-FROM python:3.11.16-slim
+# Render Docker deployment for NASA TEMPO API
+FROM python:3.12.10-slim
 
 WORKDIR /app
 
@@ -12,13 +12,19 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 
 # Install Python dependencies
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY . .
 
-# Expose port
-EXPOSE 8000
+# Create non-root user for security
+RUN useradd --create-home --shell /bin/bash app
+RUN chown -R app:app /app
+USER app
 
-# Command to run the application
-CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Use dynamic port from Render
+EXPOSE $PORT
+
+# Command to run the application with dynamic port
+CMD python -m uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}

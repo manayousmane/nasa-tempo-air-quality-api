@@ -1,0 +1,82 @@
+{
+  "timestamp": "20251004_185904",
+  "dataset_type": "TEMPO_North_America",
+  "coverage_area": {
+    "lat_min": 40.0,
+    "lat_max": 70.0,
+    "lon_min": -130.0,
+    "lon_max": -70.0
+  },
+  "features_shape": [
+    55320,
+    33
+  ],
+  "targets_shape": [
+    53937,
+    6
+  ],
+  "temporal_resolution": "6_hours",
+  "historical_days": 90,
+  "grid_points": 470,
+  "prediction_horizons_hours": [
+    1,
+    3,
+    6,
+    12,
+    24
+  ],
+  "features_columns": [
+    "latitude",
+    "longitude",
+    "hour",
+    "day_of_week",
+    "month",
+    "season",
+    "is_weekend",
+    "hour_sin",
+    "hour_cos",
+    "day_sin",
+    "day_cos",
+    "month_sin",
+    "month_cos",
+    "temperature",
+    "humidity",
+    "pressure",
+    "wind_speed",
+    "wind_direction",
+    "wind_u",
+    "wind_v",
+    "elevation",
+    "population_density",
+    "urban_index",
+    "land_use_urban",
+    "land_use_suburban",
+    "land_use_rural",
+    "land_use_forest",
+    "pm25_current",
+    "pm10_current",
+    "no2_current",
+    "o3_current",
+    "co_current",
+    "so2_current"
+  ],
+  "targets_columns": [
+    "pm25_target",
+    "pm10_target",
+    "no2_target",
+    "o3_target",
+    "co_target",
+    "so2_target"
+  ],
+  "coverage_validation": {
+    "lat_range": [
+      40.0,
+      68.0
+    ],
+    "lon_range": [
+      -130.0,
+      -71.208
+    ],
+    "total_locations": 461
+  }
+}

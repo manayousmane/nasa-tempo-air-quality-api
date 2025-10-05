@@ -1,6 +1,10 @@
 # NASA TEMPO Air Quality API - Production Dependencies
 # Based on actual code analysis - only libraries that are actually imported
 
+# Build tools (fix for Python 3.13 compatibility)
+setuptools>=65.0.0
+wheel>=0.37.0
+
 # Core FastAPI Framework
 fastapi==0.104.1
 uvicorn[standard]==0.24.0

@@ -24,7 +24,8 @@ import logging
 
 # Import des collecteurs développés
 from app.collectors.open_source_collector import OpenSourceAirQualityCollector
-from app.collectors.test_north_america_states import NorthAmericaAirQualityTester
+# Temporarily commented out for deployment
+# from app.collectors.test_north_america_states import NorthAmericaAirQualityTester
 
 logger = logging.getLogger(__name__)
 
@@ -240,7 +241,8 @@ class AdvancedGeolocationService:
         
         # Initialiser les collecteurs
         self.open_source_collector = OpenSourceAirQualityCollector()
-        self.north_america_tester = NorthAmericaAirQualityTester()
+        # Temporarily commented out for deployment
+        # self.north_america_tester = NorthAmericaAirQualityTester()
         
         print("🌍 SERVICE GÉOLOCALISATION AVANCÉ INITIALISÉ")
         print("✅ Base de données 16 États/Provinces Amérique du Nord")

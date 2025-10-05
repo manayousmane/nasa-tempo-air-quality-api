@@ -15,7 +15,8 @@ from datetime import datetime, timedelta
 # Import du nouveau collecteur open source
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 from app.collectors.open_source_collector import OpenSourceAirQualityCollector
-from app.collectors.test_north_america_states import NorthAmericaAirQualityTester
+# Temporarily commented out for deployment
+# from app.collectors.test_north_america_states import NorthAmericaAirQualityTester
 
 from app.models.simple_schemas import (
     SimpleAirQualityResponse, SimpleForecastResponse, SimpleHistoricalResponse,
@@ -37,8 +38,8 @@ class AirQualityService:
         self.ml_service = MLService()
         # Initialiser le nouveau collecteur open source
         self.open_source_collector = OpenSourceAirQualityCollector()
-        # Initialiser le testeur Amérique du Nord
-        self.north_america_tester = NorthAmericaAirQualityTester()
+        # Initialiser le testeur Amérique du Nord - temporarily commented out for deployment
+        # self.north_america_tester = NorthAmericaAirQualityTester()
         logger.info("🚀 AirQualityService initialisé avec collecteurs open source")
     
     @cached("current_air_quality", ttl=300)  # 5 minutes

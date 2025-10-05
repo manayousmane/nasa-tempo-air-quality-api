@@ -7,9 +7,10 @@ This package contains various data collectors for air quality information:
 """
 
 from .open_source_collector import OpenSourceAirQualityCollector
-from .test_north_america_states import NorthAmericaAirQualityTester
+# Temporarily commented out for deployment
+# from .test_north_america_states import NorthAmericaAirQualityTester
 
 __all__ = [
     'OpenSourceAirQualityCollector',
-    'NorthAmericaAirQualityTester'
+    # 'NorthAmericaAirQualityTester'
 ]

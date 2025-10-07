@@ -1,0 +1,21 @@
+# Render.com deployment configuration
+# This file defines environment variables and settings for Render deployment
+
+# Service Type: Web Service
+# Environment: Python 3.11
+# Build Command: pip install -r requirements.txt
+# Start Command: python start_production.py
+
+# Required Environment Variables:
+NASA_EARTHDATA_USERNAME=your_nasa_username
+NASA_EARTHDATA_PASSWORD=your_nasa_password  
+NASA_EARTHDATA_TOKEN=your_nasa_token
+
+# Optional Environment Variables:
+DEBUG=False
+LOG_LEVEL=INFO
+HOST=0.0.0.0
+# PORT is automatically set by Render
+
+# Health Check URL: /health
+# Auto-Deploy: Yes (on git push to main branch)

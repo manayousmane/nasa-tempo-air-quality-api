@@ -43,9 +43,10 @@ def check_environment():
             missing_vars.append(var)
     
     if missing_vars:
-        logger.error(f"Missing required environment variables: {missing_vars}")
-        logger.error("Please configure your .env file with NASA credentials")
-        return False
+        logger.warning(f"Missing NASA environment variables: {missing_vars}")
+        logger.warning("Running in limited mode - some NASA TEMPO features may not be available")
+        logger.warning("For full functionality, configure NASA credentials at https://earthdata.nasa.gov/")
+        # Don't exit - allow the app to start in limited mode
     
     logger.info("Environment variables configured")
     return True
@@ -97,9 +98,8 @@ def main():
     logger.info("Starting NASA TEMPO Air Quality API")
     logger.info("="*50)
     
-    # Pre-flight checks
-    if not check_environment():
-        sys.exit(1)
+    # Pre-flight checks - continue even if some fail
+    check_environment()  # Remove the sys.exit(1) dependency
     
     if not check_dependencies():
         sys.exit(1)

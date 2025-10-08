@@ -18,10 +18,20 @@ from typing import Optional, Dict
 import logging
 import asyncio
 from starlette.responses import JSONResponse  
-from .services.real_air_quality_service import RealAirQualityService
-from .services.air_quality_integration import AirQualityIntegration
-from .services.tempo_latest_service import TempoLatestService
 from .services.hybrid_tempo_service import HybridTEMPOService
+
+# Import conditionnel pour les services optionnels
+try:
+    from .services.air_quality_integration import AirQualityIntegration
+    AIR_QUALITY_INTEGRATION_AVAILABLE = True
+except ImportError:
+    AIR_QUALITY_INTEGRATION_AVAILABLE = False
+
+try:
+    from .services.tempo_latest_service import TempoLatestService
+    TEMPO_LATEST_SERVICE_AVAILABLE = True
+except ImportError:
+    TEMPO_LATEST_SERVICE_AVAILABLE = False
 
 # Configuration logging
 logging.basicConfig(
@@ -82,17 +92,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Service principal
-air_quality_service = RealAirQualityService()
-
-# Nouveau service d'intégration TEMPO + OpenWeather
-air_quality_integration = AirQualityIntegration()
-
-# Service TEMPO Latest - Dernières données satellites disponibles
-tempo_latest_service = TempoLatestService()
-
-# Service Hybride - TEMPO + APIs Open Source avec concentrations réelles
+# Services principaux avec imports conditionnels
 hybrid_tempo_service = HybridTEMPOService()
+
+# Services optionnels
+if AIR_QUALITY_INTEGRATION_AVAILABLE:
+    air_quality_integration = AirQualityIntegration()
+else:
+    air_quality_integration = None
+
+if TEMPO_LATEST_SERVICE_AVAILABLE:
+    tempo_latest_service = TempoLatestService()
+else:
+    tempo_latest_service = None
 
 # Compteurs de statistiques pour le monitoring
 stats_counter = {

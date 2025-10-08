@@ -18,20 +18,10 @@ from typing import Optional, Dict
 import logging
 import asyncio
 from starlette.responses import JSONResponse  
+from .services.real_air_quality_service import RealAirQualityService
+from .services.air_quality_integration import AirQualityIntegration
+from .services.tempo_latest_service import TempoLatestService
 from .services.hybrid_tempo_service import HybridTEMPOService
-
-# Import conditionnel pour les services optionnels
-try:
-    from .services.air_quality_integration import AirQualityIntegration
-    AIR_QUALITY_INTEGRATION_AVAILABLE = True
-except ImportError:
-    AIR_QUALITY_INTEGRATION_AVAILABLE = False
-
-try:
-    from .services.tempo_latest_service import TempoLatestService
-    TEMPO_LATEST_SERVICE_AVAILABLE = True
-except ImportError:
-    TEMPO_LATEST_SERVICE_AVAILABLE = False
 
 # Configuration logging
 logging.basicConfig(
@@ -92,19 +82,26 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Services principaux avec imports conditionnels
+# Service principal
+air_quality_service = RealAirQualityService()
+
+# Nouveau service d'intégration TEMPO + OpenWeather
+air_quality_integration = AirQualityIntegration()
+
+# Service TEMPO Latest - Dernières données satellites disponibles
+tempo_latest_service = TempoLatestService()
+
+# Service principal - Utiliser le service existant qui marchait
+try:
+    from .services.real_air_quality_service import RealAirQualityService
+    air_quality_service = RealAirQualityService()
+    logger.info("✅ RealAirQualityService initialisé")
+except ImportError as e:
+    logger.warning(f"⚠️ RealAirQualityService non disponible: {e}")
+    air_quality_service = None
+
+# Service Hybride - TEMPO + APIs Open Source avec concentrations réelles
 hybrid_tempo_service = HybridTEMPOService()
-
-# Services optionnels
-if AIR_QUALITY_INTEGRATION_AVAILABLE:
-    air_quality_integration = AirQualityIntegration()
-else:
-    air_quality_integration = None
-
-if TEMPO_LATEST_SERVICE_AVAILABLE:
-    tempo_latest_service = TempoLatestService()
-else:
-    tempo_latest_service = None
 
 # Compteurs de statistiques pour le monitoring
 stats_counter = {
@@ -119,8 +116,21 @@ stats_counter = {
     "tempo_summary_requests": 0
 }
 
-# Service d'intégration TEMPO + OpenWeather
-air_quality_integration = AirQualityIntegration()
+# Service d'intégration TEMPO + OpenWeather (optionnel)
+try:
+    air_quality_integration = AirQualityIntegration()
+    logger.info("✅ AirQualityIntegration initialisé")
+except Exception as e:
+    logger.warning(f"⚠️ AirQualityIntegration non disponible: {e}")
+    air_quality_integration = None
+
+# Service TEMPO Latest (optionnel)
+try:
+    tempo_latest_service = TempoLatestService()
+    logger.info("✅ TempoLatestService initialisé")
+except Exception as e:
+    logger.warning(f"⚠️ TempoLatestService non disponible: {e}")
+    tempo_latest_service = None
 
 # Statistiques d'utilisation simple
 usage_stats = {
@@ -164,27 +174,68 @@ async def get_fallback_data(latitude: float, longitude: float) -> Dict:
 
 async def get_location_name(latitude: float, longitude: float) -> str:
     """Obtient le nom de la localisation basé sur les coordonnées"""
-    # Utilise le service de géolocalisation existant
+    # Utilise une géolocalisation simple et fiable
     try:
-        from .services.geolocation_service import AdvancedGeolocationService
-        geo_service = AdvancedGeolocationService()
-        location_name = await geo_service.get_enhanced_location_name(latitude, longitude)
-        return location_name
+        import aiohttp
+        url = "https://nominatim.openstreetmap.org/reverse"
+        params = {
+            'lat': latitude,
+            'lon': longitude,
+            'format': 'json',
+            'addressdetails': 1
+        }
+        
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, params=params) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    address = data.get('address', {})
+                    
+                    city = (address.get('city') or address.get('town') or 
+                           address.get('village') or address.get('municipality'))
+                    state = (address.get('state') or address.get('province') or 
+                            address.get('region'))
+                    country = address.get('country')
+                    
+                    parts = [p for p in [city, state, country] if p]
+                    return ', '.join(parts) if parts else f"Location {latitude:.3f}, {longitude:.3f}"
     except Exception as e:
         logger.warning(f"⚠️ Erreur géolocalisation: {e}")
-        return f"Location {latitude:.3f}, {longitude:.3f}"
+    
+    return f"Location {latitude:.3f}, {longitude:.3f}"
 
 async def get_fallback_data(latitude: float, longitude: float) -> Dict:
-    """Fonction de fallback vers l'ancien système"""
+    """Fonction de fallback vers des données par défaut"""
     try:
         logger.info("🔄 Utilisation du système de fallback")
-        result = await air_quality_service.get_current_air_quality(latitude, longitude)
-        return result
+        
+        # Données par défaut basiques mais fonctionnelles
+        return {
+            "name": await get_location_name(latitude, longitude),
+            "coordinates": [latitude, longitude],
+            "aqi": 50,
+            "pm25": 10.0,
+            "pm10": 15.0,
+            "no2": 20.0,
+            "o3": 40.0,
+            "so2": 5.0,
+            "co": 0.5,
+            "temperature": 15.0,
+            "humidity": 65.0,
+            "windSpeed": 3.0,
+            "windDirection": "N",
+            "pressure": 1013.0,
+            "visibility": 10.0,
+            "lastUpdated": datetime.utcnow().isoformat() + "Z",
+            "dataSource": "Fallback Default",
+            "weatherCondition": "clear"
+        }
+        
     except Exception as e:
         logger.error(f"❌ Erreur fallback: {e}")
         # Derniers secours - données par défaut
         return {
-            "name": await get_location_name(latitude, longitude),
+            "name": f"Location {latitude:.3f}, {longitude:.3f}",
             "coordinates": [latitude, longitude],
             "aqi": 50,
             "pm25": 10.0,
@@ -316,54 +367,31 @@ async def get_current_air_quality(
                 detail="Coordonnées invalides. Latitude: -90 à 90, Longitude: -180 à 180"
             )
         
-        logger.info(f"🌍 Requête données actuelles (NOUVEAU): {latitude:.4f}, {longitude:.4f}")
+        logger.info(f"🌍 Requête données actuelles: {latitude:.4f}, {longitude:.4f}")
         
         # Mettre à jour les statistiques
         if background_tasks:
             background_tasks.add_task(update_stats, "current_data")
         
-        # 🎯 NOUVELLE RÉCUPÉRATION AVEC TEMPO + OPENWEATHER
-        logger.info("🚀 Utilisation du nouveau service d'intégration TEMPO + OpenWeather")
-        real_time_data = await air_quality_integration.get_real_time_data(latitude, longitude)
+        # Récupérer les données réelles comme avant
+        if air_quality_service:
+            result = await air_quality_service.get_current_air_quality(latitude, longitude)
+        else:
+            # Fallback vers le service hybride si nécessaire
+            result = await hybrid_tempo_service.get_comprehensive_air_quality(latitude, longitude)
         
-        # Formatage pour votre réponse existante
-        response = {
-            "name": await get_location_name(latitude, longitude),
-            "coordinates": [latitude, longitude],
-            "aqi": real_time_data.get('aqi', 50),
-            "pm25": real_time_data.get('pm25', 10.0),
-            "pm10": real_time_data.get('pm10', 15.0),
-            "no2": real_time_data.get('no2', 20.0),
-            "o3": real_time_data.get('o3', 40.0),
-            "so2": real_time_data.get('so2', 5.0),
-            "co": real_time_data.get('co', 0.5),
-            "temperature": real_time_data.get('temperature', 15.0),
-            "humidity": real_time_data.get('humidity', 65.0),
-            "windSpeed": real_time_data.get('wind_speed', 3.0),
-            "windDirection": real_time_data.get('wind_direction', 'N'),
-            "pressure": real_time_data.get('pressure', 1013.0),
-            "visibility": real_time_data.get('visibility', 10.0),
-            "lastUpdated": real_time_data.get('lastUpdated', datetime.utcnow().isoformat() + "Z"),
-            "dataSource": real_time_data.get('data_source', 'Multiple'),
-            "weatherCondition": real_time_data.get('weather_condition', 'clear')
-        }
+        logger.info(f"✅ Données actuelles livrées: AQI {result.get('aqi', 'N/A')} - Source: {result.get('data_source', 'Unknown')}")
         
-        # Ajouter des métadonnées sur la source
-        if 'simulation_note' in real_time_data:
-            response['simulationNote'] = real_time_data['simulation_note']
-        
-        logger.info(f"✅ Données livrées depuis: {real_time_data.get('data_source', 'Unknown')}")
-        logger.info(f"   AQI: {response['aqi']}, Source principale: {response['dataSource']}")
-        
-        return response
+        return result
         
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"❌ Erreur nouveau service: {e}")
-        logger.info("🔄 Basculement vers l'ancien système (fallback)")
-        # Fallback vers votre code existant
-        return get_fallback_data(latitude, longitude)
+        logger.error(f"❌ Erreur données actuelles: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Erreur lors de la récupération des données: {str(e)}"
+        )
 
 @app.get("/forecast", tags=["Forecasting"])
 async def get_air_quality_forecast(
